@@ -94,7 +94,7 @@ vi ex_script.sh
 ```
 > Updating function ex_script code <br>
 
-6. Tail the sloudwatch logs for the lambda in one shell and trigger the lambda in another
+6. Tail the cloudwatch logs for the lambda in one shell and trigger the lambda in another
 ```bash
 ./lambda_bash.sh -o tail -s ex_script.sh
 ```
@@ -107,7 +107,7 @@ aws s3 cp README.md s3://css-my-bucket
 
 Now look at the logs from the tail session.
 
-8. Undeploy the lambda
+7. Undeploy the lambda
 
 ```bash
 ./lambda_bash.sh -o destroy -s ex_script.sh
