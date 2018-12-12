@@ -6,6 +6,18 @@ It was inspired by the project https://github.com/gkrizek/bash-lambda-layer
 
 Of course the tool was built in bash (though it would have been cleaner in python). 
 
+## Files 
+
+* lambda_bash.sh - this is the deployment tool that deploys, runs, updates, describes and destroys your lambda. See usage below. 
+* ex_script.sh - this is an example bash script to deploy as a lambda. The main things to remember are
+	1. code must run in a function called handler, event data is passed as a json string to $1
+	2. if you want to return data to the caller, send it to stderr (stdout is logged in cloudwatch logs)
+	3. you must `set -e` to ensure that the script aborts on error (the way real programming languages work)
+* assume_role_policy.json - this is the template for the IAM role that is created for the lambda. Should not need editing
+* s3_event.json - this is the event configuration used if you specify -b (s3 bucket event). The LambdaFunctionArn parameter will be updated with the real lambda ARN on deployment
+* s3_event_filter_example.json - an example version of the s3_event.json file that filters on things like prefix and suffix, incase you only want to trigger your lambda for objects in certain directory, or with a certain suffix. 
+
+
 ## Usage
 ```bash
 $ ./lambda_bash.sh -h
