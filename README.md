@@ -47,13 +47,13 @@ aws s3 mb s3://css-my-bucket
 ```bash
 ./lambda_bash.sh -o deploy -s ex_script.sh -b css-my-bucket
 ```
-> creating role ex_script_lambdarole
-> attaching IAM policy arn:aws:iam::aws:policy/AdministratorAccess to role ex_script_lambdarole
-> sleeping 20 seconds to allow role to attach
-> deploying function ex_script
-> updating s3 event config s3_event.json with FunctionArn: arn:aws:lambda:us-east-1:150337127586:function:ex_script
-> adding permission for s3 to invoke function ex_script
-> attaching bucket-notification to bucket css-my-bucket for lambda ex_script with config s3_event.json
+> creating role ex_script_lambdarole<br>
+> attaching IAM policy arn:aws:iam::aws:policy/AdministratorAccess to role ex_script_lambdarole<br>
+> sleeping 20 seconds to allow role to attach<br>
+> deploying function ex_script<br>
+> updating s3 event config s3_event.json with FunctionArn: arn:aws:lambda:us-east-1:150337127586:function:ex_script<br>
+> adding permission for s3 to invoke function ex_script<br>
+> attaching bucket-notification to bucket css-my-bucket for lambda ex_script with config s3_event.json<br>
 
 4. Invoke the script manually
 ```bash
