@@ -117,7 +117,8 @@ if [ -z $REGION ]; then
 fi
 # Check that the region name is valid
 if [ `aws ec2 describe-regions | jq .Regions[].RegionName | grep -c $REGION` -lt 1 ]; then
-    echo "ERROR: invalide region name specified: $REGION" 1>&2
+    echo "ERROR: invalid region name specified: $REGION" 1>&2
+    exit 1
 fi
 # Set the region environment var for the aws cli
 export AWS_DEFAULT_REGION=$REGION
@@ -127,12 +128,14 @@ if [ -z $POLICY ]; then
     # user didnt supply a policy. Default to Admin access
     POLICY_ARN=arn:aws:iam::aws:policy/AdministratorAccess
 else
-    # TODO: make a more robust check of the policy
+    # TODO: check the policy for validity
+    # TODO: accept non AWS managed policies (user could provide an ARN)
     POLICY_ARN=arn:aws:iam::aws:policy/$POLICY
 fi
 # Define the name for the IAM role
 ROLE_NAME=${BASE_NAME}_lambdarole
 
+# The main loop
 case $OPERATION in
     deploy ) # Deploy the IAM role and function from scratch
         # Create the role for the lambda
@@ -156,7 +159,6 @@ case $OPERATION in
         # Get the role ARN
         ROLE_ARN=`aws iam get-role --role-name $ROLE_NAME | jq .Role.Arn | sed s/\"//g`
 
-        # Zip up the input 
         # Deploy function
         # TODO: Should validate that the function is setup right first
         if [ `aws lambda list-functions | jq .Functions[].FunctionName | grep -c $FUNCTION` -lt 1 ]; then 
@@ -208,9 +210,8 @@ case $OPERATION in
         fi
         ;;
 
-    update ) # update the code
+    update ) # update the code (note, does not update lambda params or IAM role, even if speficified)
         # TODO: check the validity of role an lambda params on update 
-        # Zip up the input 
         if [ `aws lambda list-functions | jq .Functions[].FunctionName | grep -c $FUNCTION` -lt 1 ]; then 
             echo "ERROR: lambda function $FUNCTION does not exist" 2>&1
             exit 1
@@ -224,14 +225,17 @@ case $OPERATION in
         rm $ZIP
         ;;
 
-    run ) # run the script as a lambda
+    run ) # run the script as a lambda, print result to stdout
         if [ `aws lambda list-functions | jq .Functions[].FunctionName | grep -c $FUNCTION` -lt 1 ]; then 
             echo "ERROR: lambda function $FUNCTION does not exist" 2>&1
             exit 1
         else
             echo "invoking lambda $FUNCTION"
             echo "---------START RESPONSE------------"
-            aws lambda invoke --function-name $FUNCTION --log-type Tail /dev/null | jq .LogResult | sed s/\"//g | base64 --decode
+            aws lambda invoke \
+                --function-name $FUNCTION \
+                --log-type Tail /dev/null \
+                | jq .LogResult | sed s/\"//g | base64 --decode
             echo "---------END RESPONSE------------"
         fi
         ;;
@@ -241,14 +245,17 @@ case $OPERATION in
             echo "WARNING: lambda function $FUNCTION does not exist"
         else
             echo "deleting lambda $FUNCTION"
-            aws lambda delete-function --function-name $FUNCTION
+            aws lambda delete-function \
+                --function-name $FUNCTION
         fi
         if [ `aws iam list-roles | jq .Roles[].RoleName | grep -c $ROLE_NAME` -lt 1 ]; then 
             echo "WARNING: role $ROLE_NAME does not exist"
         else
             for POLICY_ARN in `aws iam list-attached-role-policies --role-name $ROLE_NAME | jq .AttachedPolicies[].PolicyArn | sed s/\"//g`; do
                 echo "detaching POLICY_ARN $POLICY_ARN from Role $ROLE_NAME"
-                aws iam detach-role-policy --role-name $ROLE_NAME --policy-arn $POLICY_ARN
+                aws iam detach-role-policy \
+                    --role-name $ROLE_NAME \
+                    --policy-arn $POLICY_ARN
             done
             echo "deleting ROLE: $ROLE_NAME"
             aws iam delete-role --role-name $ROLE_NAME
@@ -260,12 +267,12 @@ case $OPERATION in
             echo "WARNING: lambda function $FUNCTION does not exist"
         else
             echo "getting lambda $FUNCTION"
-            aws lambda get-function --function-name $FUNCTION
+            aws lambda get-function \
+                --function-name $FUNCTION
         fi
         ;;
 
     tail ) # tail the cloudwatch logs
-        #set -x
         GROUP_NAME="/aws/lambda/$FUNCTION"
         START_SECONDS_AGO=3600
         # Get the UTC time in mili seconds where we want to start
@@ -279,7 +286,7 @@ case $OPERATION in
                 # Set the start time to be the last log time +1
                 START_TIME=$(( $LAST_LOG_TIME + 1 ))
             else
-                # We didnt pull any logs in the last iteration, so add 1 second to the old START_TIME
+                # We didnt pull any logs in the last iteration, so add 1 mili-second to the old START_TIME
                 START_TIME=$(( $START_TIME + 1 ))
             fi
             # Print the timestamps and the log messages
