@@ -2,7 +2,7 @@
 
 This is a utility designed to deploy a bash script to AWS lambda
 
-It was inspired by the project (https://github.com/gkrizek/bash-lambda-layer)
+It was inspired by the project https://github.com/gkrizek/bash-lambda-layer
 
 Of course the tool was built in bash (though it would have been cleaner in python). 
 
