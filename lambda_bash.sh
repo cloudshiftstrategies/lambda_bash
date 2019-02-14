@@ -97,7 +97,7 @@ elif [ ! -f $SCRIPT ]; then
     exit 1
 else
     # Everything seems ok.. set up the vars
-    BASE_NAME=`echo ${SCRIPT} | awk -F'.' '{print$1}'`
+    BASE_NAME=$(echo `basename ${SCRIPT}` | awk -F'.' '{print$1}')
     FUNCTION=${BASE_NAME}
     ZIP=${BASE_NAME}.zip
     HANDLER=${BASE_NAME}.handler
